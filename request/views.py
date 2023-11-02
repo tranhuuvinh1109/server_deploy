@@ -11,9 +11,8 @@ from .emails import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .models import User
 
-from django.contrib.auth import get_user_model
-User = get_user_model()
 
 
 class UserSerializerNested(serializers.Serializer):
@@ -21,15 +20,6 @@ class UserSerializerNested(serializers.Serializer):
     email = serializers.EmailField()
     avatar = serializers.CharField()
     username = serializers.CharField()
-
-
-class ProjectSerializer(serializers.ModelSerializer):
-    user = UserSerializerNested()
-
-    class Meta:
-        model = Project
-        fields = ['id', 'user', 'progress', 'status', 'link_drive']
-
 
 
 
@@ -40,41 +30,85 @@ class CreateProjectAPI(APIView):
     def post(self, request):
         print("Sending....")
         user_id = request.data.get('user_id')
-        project_id = request.data.get('project_id')
         file = request.FILES.get("file")
         name = request.data.get("name")
         create_time = request.data.get("create_at")
-        print("user_id: ", user_id)
-        print("project_id: ", project_id)
-        print("name: ", name)
 
-        data = {
-            'user_id': user_id,
-            'project_id': project_id,
-            'name': name,
-            'create_time':create_time
-        }
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except:
+            print("Couldn't create", user_id)
+        serializer = ProjectSerializer(data={
+            'user': user.id,
+            'name': request.data.get('name'),
+            'progress': 0,
+            'status': 'waiting',
+            'link_drive': ""
+        })
+        
+        if serializer.is_valid():
+            project = serializer.save()
+            prj_id = project.id
+            print("--------000---", prj_id)
+            data = {
+                'user_id': user_id,
+                'project_id': prj_id,
+                'name': name,
+                'create_time':create_time
+                }
+            files = {'file': file}
+            response = requests.post(url, data=data, files=files)
+            return Response({"message": "Create Projecf Succesfully.", "data": serializer.data}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UpdateProject(APIView):
+    def put(self, request, project_id):
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project does not exist', 'status': 404}, status=status.HTTP_404_NOT_FOUND)
 
-        files = {'file': file}
-        response = requests.post(url, data=data, files=files)
-        return Response({"message":"Create project"}, status=status.HTTP_200_OK)
-        # if response.status_code == 201:
-        #     print("Code 200")
-        #     return Response({"message":"Create project"}, status=status.HTTP_201_CREATED)
-        # else:
-        #     print("Gửi thất bại")
-        #     return Response({'message': 'Lỗi khi gửi dự án'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProjectSerializer(project, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            Response({'message': "Update project successfully", 'data': serializer.data}, status=status.HTTP_200_OK)
+        return Response({'message': "Update project Fail", 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+class ListAllProjects(APIView):
+    def get(self, request):
+        projects = Project.objects.all()
+        serializer = ProjectSerializer(projects, many=True)
+        return Response({'message': "Get project successfully", 'data': serializer.data, 'status': 200})
+
+class GetProjectByID(APIView):
+    def get(self, request, project_id):
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProjectSerializer(project)
+        return Response({'message': "Get project successfully", 'data': serializer.data}, status=status.HTTP_200_OK)
+
+class DeleteProject(APIView):
+    def delete(self, request, project_id):
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response({'error': 'Project does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        project.delete()
+        return Response({'message': 'Project deleted successfully'}, status=status.HTTP_200_OK)
 
 class RegisterAPI(APIView):
     def post(self, request):
-        print("->>>>>>>>>>>>>>>>>>>>>>>", request.data)
         data = request.data
         serializers = UserSerializer(data=data)
 
         if serializers.is_valid():
             serializers.save()
-            send_otp_via_email(serializers.data['email'])
             return Response({
                 'status': 200,
                 'message': 'User registered successfully, please check your Email to confirm',
@@ -136,38 +170,35 @@ class VerifyOTP(APIView):
  
 class LoginAPI(APIView):
     def post(self, request):
-        try:
-            serializers = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data)
 
-            if serializers.is_valid():
-                email = serializers.validated_data['email']
-                password = serializers.validated_data['password']
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
 
-                user = User.objects.filter(email=email)
+            user = User.objects.filter(email=email)
 
-                if user.exists() and user.count() == 1:
-                    user_data = user.first()
+            if user.exists() and user.count() == 1:
+                user_data = user.first()
 
-                    if user_data.check_password(password):
-                        return Response({
-                            'status': 200,
-                            'message': 'User login successful',
-                            'data': {
-                                'user': UserSerializer(user_data).data
-                            }
-                        })
-                    else:
-                        return Response({
-                            'status': 400,
-                            'message': 'Wrong password or email, please try again',
-                        })
-                else:
+                if user_data.check_password(password):
                     return Response({
-                        'status': 400,
-                        'message': 'User login failed, please try again',
+                        'status': 200,
+                        'message': 'User login successful',
+                        'data': {
+                            'user': UserSerializer(user_data).data
+                        }
                     })
-        except serializers.ValidationError:
-            print(serializers.ValidationError)
+            else:
+                return Response({
+                    'status': 400,
+                    'message': 'Wrong password or email, please try again',
+                })
+        else:
+            return Response({
+                'status': 400,
+                'message': 'Invalid input, please provide valid email and password',
+            })
 
 class InforUser(APIView):
     def get(self, request, user_id):

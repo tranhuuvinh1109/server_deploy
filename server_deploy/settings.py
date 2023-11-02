@@ -54,7 +54,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'server_deploy.urls'
-AUTH_USER_MODEL = 'request.User'
+# AUTH_USER_MODEL = 'request.User'
 
 TEMPLATES = [
     {

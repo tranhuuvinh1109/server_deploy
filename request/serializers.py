@@ -5,15 +5,16 @@ from .models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'avatar', 'username')
+        # fields = ['id', 'username', 'email', 'password']
+        fields = ('id', 'username', 'email','avatar', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
-            avatar=validated_data['avatar'],
+            username=validated_data['username'],
             password=validated_data['password'],
-            username=validated_data['username']
+            avatar=validated_data['avatar']
         )
         return user
 
@@ -26,11 +27,6 @@ class VerifyAccountSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
 
 
 class ProjectSerializer(serializers.ModelSerializer):

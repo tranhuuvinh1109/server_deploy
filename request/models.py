@@ -1,14 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager, AbstractBaseUser
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.conf import settings
-import ssl
 
-from django.dispatch import receiver
-from django.utils import timezone
-import uuid
-from .manager import UserManager
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -36,7 +29,7 @@ class User(AbstractBaseUser):
         max_length=255, unique=True, default='default username')
     email = models.EmailField(max_length=255, unique=True)
     is_verified = models.BooleanField(default=False)
-    avatar = models.CharField(max_length=255)
+    avatar = models.CharField(max_length=1000)
     otp = models.CharField(max_length=6, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
@@ -54,7 +47,7 @@ class Project(models.Model):
     name = models.CharField(max_length=255)
     progress = models.IntegerField()
     status = models.CharField(max_length=255)
-    link_drive = models.CharField(max_length=255)
+    link_drive = models.CharField(max_length=255, default="", blank=True)
 
     def __str__(self):
         return f"Project {self.id} - {self.name} - {self.status}"
