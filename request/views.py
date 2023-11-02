@@ -66,26 +66,26 @@ class CreateProjectAPI(APIView):
         #     return Response({'message': 'Lỗi khi gửi dự án'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class RegisterAPI(APIView):
-#     def post(self, request):
-#         print("->>>>>>>>>>>>>>>>>>>>>>>", request.data)
-#         data = request.data
-#         serializers = UserSerializer(data=data)
+class RegisterAPI(APIView):
+    def post(self, request):
+        print("->>>>>>>>>>>>>>>>>>>>>>>", request.data)
+        data = request.data
+        serializers = UserSerializer(data=data)
 
-#         if serializers.is_valid():
-#             serializers.save()
-#             send_otp_via_email(serializers.data['email'])
-#             return Response({
-#                 'status': 200,
-#                 'message': 'User registered successfully, please check your Email to confirm',
-#                 'data': serializers.data
-#             })
+        if serializers.is_valid():
+            serializers.save()
+            send_otp_via_email(serializers.data['email'])
+            return Response({
+                'status': 200,
+                'message': 'User registered successfully, please check your Email to confirm',
+                'data': serializers.data
+            })
 
-#         return Response({
-#             'status': 400,
-#             'message': 'User registration failed, please try again',
-#             'data': serializers.errors
-#         })
+        return Response({
+            'status': 400,
+            'message': 'User registration failed, please try again',
+            'data': serializers.errors
+        })
 
 
 class VerifyOTP(APIView):
