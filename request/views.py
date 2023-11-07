@@ -23,7 +23,8 @@ class UserSerializerNested(serializers.Serializer):
 
 
 
-url = 'http://127.0.0.1:8001/api/train/'
+# url = 'http://127.0.0.1:8001/api/train/'
+url = 'https://96c5-117-2-255-218.ngrok.io/api/train/'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class CreateProjectAPI(APIView):
