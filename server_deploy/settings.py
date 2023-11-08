@@ -59,7 +59,7 @@ ROOT_URLCONF = 'server_deploy.urls'
 # AUTH_USER_MODEL = 'request.User'
 # CORS_ALLOWED_ORIGINS = ['*']
 # CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
-# CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_HEADERS = ['*']
 # CORS_ALLOW_CREDENTIALS = True
 TEMPLATES = [
     {
