@@ -29,7 +29,14 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+
+class ProjectSerializerCreate(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'user', 'name' , 'progress', 'status', 'link_drive']
+class ProjectSerializer(serializers.ModelSerializer):
+    user = UserSerializer() 
+    class Meta:
+        model = Project
+        fields = ['id', 'user', 'name' , 'progress', 'status', 'link_drive']
+

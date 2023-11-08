@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User
-
+from django.db.models import Q
 
 
 class UserSerializerNested(serializers.Serializer):
@@ -24,7 +24,7 @@ class UserSerializerNested(serializers.Serializer):
 
 
 # url = 'http://127.0.0.1:8001/api/train/'
-url = 'https://96c5-117-2-255-218.ngrok.io/api/train/'
+url = 'https://0ef4-117-2-255-218.ngrok.io/api/'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class CreateProjectAPI(APIView):
@@ -34,14 +34,14 @@ class CreateProjectAPI(APIView):
         file = request.FILES.get("file")
         name = request.data.get("name")
         create_time = request.data.get("create_at")
-
         
         try:
             user = User.objects.get(id=user_id)
         except:
             print("Couldn't create", user_id)
-        serializer = ProjectSerializer(data={
+        serializer = ProjectSerializerCreate(data={
             'user': user.id,
+            # 'user': user,
             'name': request.data.get('name'),
             'progress': 0,
             'status': 'waiting',
@@ -59,7 +59,8 @@ class CreateProjectAPI(APIView):
                 'create_time':create_time
                 }
             files = {'file': file}
-            response = requests.post(url, data=data, files=files)
+            url_worker_create = url + 'train/'
+            response = requests.post(url_worker_create, data=data, files=files)
             return Response({"message": "Create Projecf Succesfully.", "data": serializer.data}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -80,8 +81,14 @@ class UpdateProject(APIView):
 class ListAllProjects(APIView):
     def get(self, request):
         projects = Project.objects.all()
-        serializer = ProjectSerializer(projects, many=True)
-        return Response({'message': "Get project successfully", 'data': serializer.data, 'status': 200})
+        data = []
+
+        for project in projects:
+            project_serializer = ProjectSerializer(project)
+            data.append(project_serializer.data)
+        
+        return Response({'message': "Get project successfully", 'data': data}, status=status.HTTP_200_OK)
+
 
 class GetProjectByID(APIView):
     def get(self, request, project_id):
@@ -93,6 +100,25 @@ class GetProjectByID(APIView):
         serializer = ProjectSerializer(project)
         return Response({'message': "Get project successfully", 'data': serializer.data}, status=status.HTTP_200_OK)
 
+class GetUserByID(APIView):
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+       
+        user_data = UserSerializerNested(user).data
+
+        response_data = {
+            'message': f'Information for user with id {user_id}',
+            'data': {
+                'user': user_data,
+            }
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class DeleteProject(APIView):
     def delete(self, request, project_id):
         try:
@@ -101,7 +127,26 @@ class DeleteProject(APIView):
             return Response({'error': 'Project does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         project.delete()
-        return Response({'message': 'Project deleted successfully'}, status=status.HTTP_200_OK)
+        return Response({'message': f'Project id={project_id} deleted successfully'}, status=status.HTTP_200_OK)
+    
+class SearchAPI(APIView):
+    def get(self, request):
+        query = request.query_params.get('q')
+        if query:
+            user_results = User.objects.filter(Q(username__icontains=query) | Q(email__icontains=query))
+            user_serializer = UserSerializer(user_results, many=True)
+
+            project_results = Project.objects.filter(name__icontains=query)
+            project_serializer = ProjectSerializer(project_results, many=True)
+
+            response_data = {
+                'users': user_serializer.data,
+                'projects': project_serializer.data
+            }
+
+            return Response({'data':response_data, 'message': 'Get Data By Query' }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'No search query provided'}, status=status.HTTP_400_BAD_REQUEST)
 
 class RegisterAPI(APIView):
     def post(self, request):
@@ -221,6 +266,27 @@ class InforUser(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+    
+class DashboardProjectAPI(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        user_data = []
+        
+        for user in users:
+            projects = Project.objects.filter(user=user)
+            serializer = ProjectSerializer(projects, many=True)
+            user_data.append({
+                'user': UserSerializer(user).data,
+                'projects': serializer.data
+            })
+
+        response_data = {
+            'message': "Get all projects successfully",
+            'data': user_data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 
 
 class Me(APIView):
@@ -240,4 +306,15 @@ class Me(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class CheckWorker(APIView):
+    def get(self, request):
+        url_check_status = url + 'use_manage/check/'
+        res = requests.get(url_check_status)
+        if(res.status_code == 200):
+            return Response({'message': 'Running...'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Inactive...'}, status=status.HTTP_404_NOT_FOUND)
+
 
