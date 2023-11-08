@@ -10,10 +10,10 @@ urlpatterns = [
 	path('register/', views.RegisterAPI.as_view()),
     path('verify/', views.VerifyOTP.as_view()),
     path('login/', views.LoginAPI.as_view()),
-    path('user_manage/<int:user_id>/', views.InforUser.as_view()),
+    path('user_manage/', views.InforUser.as_view()),
     path('user_manage/check-worker/', views.CheckWorker.as_view()),
     path('user_manage/all/', views.DashboardProjectAPI.as_view()),
-    path('user/<int:user_id>/', views.GetUserByID.as_view()),
+    path('user/', views.GetUserByID.as_view()),
 	path('search/', views.SearchAPI.as_view(), name='search'),
     path('me/', views.Me.as_view()),
 ]

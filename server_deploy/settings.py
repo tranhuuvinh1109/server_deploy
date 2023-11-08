@@ -27,7 +27,6 @@ SECRET_KEY = 'django-insecure-y0adz=m)sf3y1acl=fpid@pzeplgj%71l$@8i63q)wm3#n@+g9
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Application definition
@@ -56,11 +55,18 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'server_deploy.urls'
+
 # AUTH_USER_MODEL = 'request.User'
-# CORS_ALLOWED_ORIGINS = ['*']
-# CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
-CORS_ALLOW_HEADERS = ['*']
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+# CORS_ALLOW_ALL_ORIGINS = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

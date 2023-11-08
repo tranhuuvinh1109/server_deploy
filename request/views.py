@@ -91,7 +91,8 @@ class ListAllProjects(APIView):
 
 
 class GetProjectByID(APIView):
-    def get(self, request, project_id):
+    def get(self, request):
+        project_id = request.query_params.get('q')
         try:
             project = Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
@@ -101,7 +102,8 @@ class GetProjectByID(APIView):
         return Response({'message': "Get project successfully", 'data': serializer.data}, status=status.HTTP_200_OK)
 
 class GetUserByID(APIView):
-    def get(self, request, user_id):
+    def get(self, request):
+        user_id = request.query_params.get('q')
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
@@ -247,7 +249,8 @@ class LoginAPI(APIView):
             })
 
 class InforUser(APIView):
-    def get(self, request, user_id):
+    def get(self, request):
+        user_id = request.query_params.get('q')
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
