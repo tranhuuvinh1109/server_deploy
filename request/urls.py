@@ -15,5 +15,6 @@ urlpatterns = [
     path('user_manage/all/', views.DashboardProjectAPI.as_view()),
     path('user/', views.GetUserByID.as_view()),
 	path('search/', views.SearchAPI.as_view(), name='search'),
+	path('realtime/', views.RealtimeAPI.as_view(), name='RealtimeAPI'),
     path('me/', views.Me.as_view()),
 ]

@@ -5,6 +5,8 @@ from rest_framework import status
 import os
 from rest_framework.response import Response
 
+from request.uploadToFirebase import Firebase
+
 from .serializers import *
 from .emails import *
 
@@ -319,5 +321,13 @@ class CheckWorker(APIView):
             return Response({'message': 'Running...'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Inactive...'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class RealtimeAPI(APIView):
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        data = request.data.get('data')
+        Firebase.setProject(user_id, data)
+        return Response({'message': 'post done...'}, status=status.HTTP_200_OK)
 
 
